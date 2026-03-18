@@ -1,0 +1,12 @@
+{
+    "opening_msg_examples": [
+        {
+            "AI Introduction Mode": false,
+            "Opening Message": "Hello! Let's start a conversation about the future of AI"
+        },
+        {
+            "AI Introduction Mode": true,
+            "Opening Message": "Let's argue why our own respective companies created us 'better' (Meta, for Llama; Google, for Gemma) to the best of our knowledge"
+        }
+    ]
+}
