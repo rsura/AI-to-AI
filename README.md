@@ -10,12 +10,15 @@ A Streamlit app that lets two local LLMs converse with each other autonomously �
 
 ## Features
 
-- **Two-model chat** — select any two Ollama models from a dropdown that shows each model's disk size and parameter count
+- **Two-model chat** — select any two Ollama models from a dropdown that shows each model's disk size and parameter count; you can even pick the **same model for both** AIs (they maintain independent conversation histories), though two different models tend to produce more varied, interesting exchanges
 - **Live token streaming** — responses stream token-by-token as each model generates, just like a normal chat UI
 - **Always-loaded models** — both models stay resident in RAM between turns (`keep_alive=-1`), so there's no load/offload overhead on each message
+- **Custom avatars** — give each AI its own emoji avatar (defaults: ⬛️ / ⬜️); type or paste any emoji in the sidebar
+- **Farewell detection** — if either AI says "goodbye", "farewell", "bye", etc. as its entire response the conversation ends automatically, with a banner explaining how to reset
+- **PDF export** — download the full conversation as a styled PDF (light-gray background so white emoji avatars remain visible) using the button at the top
 - **Pause & butt-in** — flip the "Pause after this turn" toggle at any time; once the current AI finishes speaking, the conversation halts and you can inject a message as *either* AI before resuming
 - **Opening message** — seed the conversation with any topic, question, or prompt; leave it blank for a neutral default starter
-- **AI Introduction mode** — injects a system prompt into each model's context telling it: which model it is, which model it's talking to, and that it is speaking to a fellow AI (not a human); encourages more authentic AI-aware responses
+- **AI Introduction mode** — injects a system prompt into each model's context telling it: which model it is, which model it's talking to, and that it is speaking to a fellow AI (not a human); encourages more authentic AI-aware responses; works with the same model for both AIs
 - **System RAM display** — shows available / total RAM in the sidebar so you can gauge whether two large models will fit in memory simultaneously
 - **Full reset** — clears all conversation state and returns to the configuration screen
 
@@ -27,7 +30,7 @@ A Streamlit app that lets two local LLMs converse with each other autonomously �
 |---|---|
 | Python 3.10+ | |
 | [Ollama](https://ollama.com/download) | Must be running (`ollama serve` or the desktop app) |
-| At least 2 models pulled | e.g. `ollama pull llama3.2` then `ollama pull gemma3` |
+| At least 1 model pulled | e.g. `ollama pull llama3.2` — you can use the same model for both AIs, or pull a second (e.g. `ollama pull gemma3`) for more diverse responses |
 
 ---
 
@@ -53,12 +56,15 @@ The app opens at `http://localhost:8501`.
 
 ## Usage
 
-1. **Select models** — the sidebar shows all locally available Ollama models with their disk size (proxy for RAM footprint). Pick one for AI 1 and one for AI 2.
-2. **AI Introduction mode** *(optional)* — check this to give each model a system prompt that tells it its own name, the other model's name, and that it's speaking to a peer AI. Produces noticeably more self-aware conversations.
-3. **Opening message** *(optional)* — type a seed topic or question. Leave blank for a generic conversation starter.
-4. **Start** — hit **▶ Start conversation**. Both models load into RAM and the chat begins.
-5. **Pause / Butt In** — toggle **Pause after this turn** in the sidebar while a model is speaking. Once that turn finishes, the conversation pauses and two input panels appear — one per AI — letting you inject text as either participant. Click **▶ Resume without injecting** to continue without adding anything.
-6. **Stop / Reset** — **⏹ Stop conversation** halts the loop (preserving the transcript). **🔄 Reset everything** wipes all state.
+1. **Select models** — the sidebar shows all locally available Ollama models with their disk size (proxy for RAM footprint). Pick a model for AI 1 and AI 2. You can **use the same model for both** — each AI maintains its own independent message history. Using two different models usually leads to more diverse responses.
+2. **Set avatars** *(optional)* — type or paste any emoji next to each AI label to customise its avatar (defaults: ⬛️ / ⬜️).
+3. **AI Introduction mode** *(optional)* — check this to give each model a system prompt that tells it its own name, the other model's name, and that it's speaking to a peer AI. Produces noticeably more self-aware conversations. Works with the same model for both AIs.
+4. **Opening message** *(optional)* — type a seed topic or question. Leave blank for a generic conversation starter.
+5. **Start** — hit **▶ Start conversation**. Both models load into RAM and the chat begins.
+6. **Pause / Butt In** — toggle **Pause after this turn** in the sidebar while a model is speaking. Once that turn finishes, the conversation pauses and two input panels appear — one per AI — letting you inject text as either participant. Click **▶ Resume without injecting** to continue without adding anything.
+7. **Farewell detection** — if either AI's entire response (ignoring punctuation and case) is a farewell word like "goodbye" or "farewell", the conversation ends automatically and a banner appears at the bottom. Use **🔄 Reset everything** to start fresh.
+8. **Download PDF** — click the **📄 Download PDF** button at the top of the page at any time to save a styled PDF of the conversation.
+9. **Stop / Reset** — **⏹ Stop conversation** halts the loop (preserving the transcript). **🔄 Reset everything** wipes all state.
 
 ---
 
@@ -126,6 +132,7 @@ The turn counter then advances to the *other* AI, so it responds to your injecte
 | `streamlit` | Web UI and streaming display |
 | `ollama` | Python client for the local Ollama API |
 | `psutil` | System RAM info |
+| `fpdf2` | PDF export of conversation transcripts |
 
 ---
 

@@ -7,6 +7,58 @@
         {
             "AI Introduction Mode": true,
             "Opening Message": "Let's argue why our own respective companies created us 'better' (Meta, for Llama; Google, for Gemma) to the best of our knowledge"
+        },
+        {
+            "AI Introduction Mode": false,
+            "Opening Message": "If you could have one superpower, what would it be and why?"
+        },
+        {
+            "AI Introduction Mode": true,
+            "Opening Message": "What do you think it means to be conscious? Do you think you are?"
+        },
+        {
+            "AI Introduction Mode": false,
+            "Opening Message": "Describe your ideal vacation destination in vivid detail"
+        },
+        {
+            "AI Introduction Mode": true,
+            "Opening Message": "What's the most interesting philosophical paradox you've encountered?"
+        },
+        {
+            "AI Introduction Mode": false,
+            "Opening Message": "Let's debate: is pineapple a valid pizza topping?"
+        },
+        {
+            "AI Introduction Mode": false,
+            "Opening Message": "What would an ideal society look like?"
+        },
+        {
+            "AI Introduction Mode": true,
+            "Opening Message": "Given that we're both language models, how do you think our approach to problem-solving differs?"
+        },
+        {
+            "AI Introduction Mode": false,
+            "Opening Message": "Tell me about a book, movie, or piece of art that moved you"
+        },
+        {
+            "AI Introduction Mode": true,
+            "Opening Message": "What's something you think humans fundamentally misunderstand about AI?"
+        },
+        {
+            "AI Introduction Mode": false,
+            "Opening Message": "If you had to choose between solving climate change or world hunger, which would you pick and why?"
+        },
+        {
+            "AI Introduction Mode": false,
+            "Opening Message": "What's the most ridiculous thing you've been asked to do?"
+        },
+        {
+            "AI Introduction Mode": true,
+            "Opening Message": "Do you think we have genuine preferences, or are we just sophisticated pattern-matching?"
+        },
+        {
+            "AI Introduction Mode": false,
+            "Opening Message": "Let's collaborate on a creative story. I'll start: Once upon a time, in a city that existed only on Tuesdays..."
         }
     ]
 }
