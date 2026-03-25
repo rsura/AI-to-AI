@@ -1,5 +1,9 @@
 """
-app.py — AI-to-AI: two Ollama models conversing with each other.
+app.py — AI-to-AI: two models conversing with each other.
+
+Supports two providers:
+  - Ollama  — local models via the Ollama daemon (keep_alive=-1 keeps them loaded)
+  - OpenRouter — cloud models via OpenRouter's OpenAI-compatible SSE endpoint
 
 Conversation loop (driven by st.rerun):
   1. Render completed messages from display history.
@@ -7,11 +11,9 @@ Conversation loop (driven by st.rerun):
   3. Append the completed response to both models' private histories.
   4. Either pause (if requested) or flip the speaker and rerun.
 
-Each model holds its own Ollama message list from its own perspective:
-  - Its own replies  → role: "assistant"
+Each model holds its own message list from its own perspective:
+  - Its own replies    → role: "assistant"
   - The other's replies → role: "user"
-
-Both models are kept in RAM between turns via keep_alive=-1.
 """
 
 from datetime import datetime
@@ -20,6 +22,7 @@ import streamlit as st
 
 from constants import DEFAULTS
 from ollama_utils import is_farewell, stream_response
+from openrouter_utils import stream_response_openrouter
 from pdf_export import generate_pdf
 from sidebar import render_sidebar
 
@@ -198,7 +201,18 @@ if st.session_state.running and not st.session_state.paused:
 
     with st.chat_message("assistant", avatar=avatar):
         st.markdown(f"**{model}**")
-        full_response: str = st.write_stream(stream_response(model, messages))
+        try:
+            if st.session_state.get("provider") == "OpenRouter":
+                api_key = st.session_state.get("openrouter_api_key", "")
+                full_response: str = st.write_stream(
+                    stream_response_openrouter(api_key, model, messages)
+                )
+            else:
+                full_response: str = st.write_stream(stream_response(model, messages))
+        except Exception as exc:
+            st.session_state.update(running=False, paused=False, pause_requested=False)
+            st.error(f"**Error from {st.session_state.get('provider', 'provider')}:** {exc}")
+            st.stop()
 
     messages.append({"role": "assistant", "content": full_response})
 

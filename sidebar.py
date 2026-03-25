@@ -10,34 +10,27 @@ from ollama_utils import build_system_prompt, get_models, get_system_ram
 
 def render_sidebar() -> None:
     """
-    Render the full sidebar: configuration, model selection, and conversation controls.
+    Render the full sidebar: provider selection, configuration, model selection,
+    and conversation controls.
 
     Mutates st.session_state directly and calls st.rerun() where needed,
     matching the original inline behaviour.
     """
     with st.sidebar:
         st.header("Configuration")
-        st.caption(f"💾 System RAM: {get_system_ram()}")
         st.divider()
 
-        models, models_error = get_models()
-        model_names  = [m["name"]  for m in models]
-        model_labels = [m["label"] for m in models]
-
-        if models_error:
-            st.error(f"Cannot reach Ollama: {models_error}")
-            st.info("Make sure Ollama is running, then refresh:\n```bash\nollama serve\n```", icon="ℹ️")
-        elif not models:
-            st.error("No Ollama models found!", icon="🚨")
-            st.markdown("Pull at least one model to get started:")
-            st.code("ollama pull llama3.2", language="bash")
-            st.caption(
-                "After pulling, refresh this page. "
-                "You can use the **same model for both AI 1 and AI 2** — "
-                "though two different models produce more diverse responses."
-            )
-
         locked = st.session_state.running
+
+        # ── Provider selection ────────────────────────────────────────────────
+        provider = st.selectbox(
+            "Provider",
+            ["Ollama", "OpenRouter"],
+            key="sel_provider",
+            disabled=locked,
+        )
+
+        st.divider()
 
         # ── Model selection ───────────────────────────────────────────────────
         st.markdown(
@@ -49,6 +42,7 @@ def render_sidebar() -> None:
             ),
         )
 
+        # Avatar inputs — always shown regardless of provider
         col_em1, col_lbl1 = st.columns([1, 4])
         with col_em1:
             st.text_input(
@@ -61,18 +55,6 @@ def render_sidebar() -> None:
             )
         with col_lbl1:
             st.markdown("**AI 1**")
-
-        idx1 = st.selectbox(
-            "AI 1 model",
-            range(len(model_labels)),
-            format_func=lambda i: model_labels[i],
-            index=0 if models else None,
-            disabled=locked,
-            label_visibility="collapsed",
-            key="sel_model1",
-        )
-
-        st.write("")  # spacer
 
         col_em2, col_lbl2 = st.columns([1, 4])
         with col_em2:
@@ -87,16 +69,86 @@ def render_sidebar() -> None:
         with col_lbl2:
             st.markdown("**AI 2**")
 
-        default_idx2 = min(1, len(models) - 1) if len(models) > 1 else 0
-        idx2 = st.selectbox(
-            "AI 2 model",
-            range(len(model_labels)),
-            format_func=lambda i: model_labels[i],
-            index=default_idx2,
-            disabled=locked,
-            label_visibility="collapsed",
-            key="sel_model2",
-        )
+        # Initialise variables so both branches of the start-button logic can
+        # reference them without worrying about which branch ran.
+        models: list[dict] = []
+        model_names: list[str] = []
+        model_labels: list[str] = []
+        idx1 = idx2 = 0
+        or_api_key = or_model1 = or_model2 = ""
+
+        st.write("")  # spacer
+
+        if provider == "Ollama":
+            # ── Ollama: show RAM info + model dropdowns ───────────────────────
+            st.caption(f"💾 System RAM: {get_system_ram()}")
+
+            models, models_error = get_models()
+            model_names = [m["name"] for m in models]
+            model_labels = [m["label"] for m in models]
+
+            if models_error:
+                st.error(f"Cannot reach Ollama: {models_error}")
+                st.info(
+                    "Make sure Ollama is running, then refresh:\n```bash\nollama serve\n```",
+                    icon="ℹ️",
+                )
+            elif not models:
+                st.error("No Ollama models found!", icon="🚨")
+                st.markdown("Pull at least one model to get started:")
+                st.code("ollama pull llama3.2", language="bash")
+                st.caption(
+                    "After pulling, refresh this page. "
+                    "You can use the **same model for both AI 1 and AI 2** — "
+                    "though two different models produce more diverse responses."
+                )
+
+            idx1 = st.selectbox(
+                "AI 1 model",
+                range(len(model_labels)),
+                format_func=lambda i: model_labels[i],
+                index=0 if models else None,
+                disabled=locked,
+                label_visibility="collapsed",
+                key="sel_model1",
+            )
+
+            st.write("")  # spacer
+
+            default_idx2 = min(1, len(models) - 1) if len(models) > 1 else 0
+            idx2 = st.selectbox(
+                "AI 2 model",
+                range(len(model_labels)),
+                format_func=lambda i: model_labels[i],
+                index=default_idx2,
+                disabled=locked,
+                label_visibility="collapsed",
+                key="sel_model2",
+            )
+
+        else:
+            # ── OpenRouter: three stacked text inputs ─────────────────────────
+            or_api_key = st.text_input(
+                "OpenRouter API Key",
+                type="password",
+                disabled=locked,
+                key="inp_or_api_key",
+                placeholder="sk-or-…",
+            )
+            or_model1 = st.text_input(
+                "Model 1 Name",
+                disabled=locked,
+                key="inp_or_model1",
+                placeholder="meta-llama/llama-3.3-70b-instruct:free",
+                help="Name will look something like this: 'meta-llama/llama-3.3-70b-instruct:free'",
+            )
+            or_model2 = st.text_input(
+                "Model 2 Name",
+                disabled=locked,
+                key="inp_or_model2",
+                placeholder="qwen/qwen3-next-80b-a3b-instruct:free",
+                help="Name will look something like this: 'qwen/qwen3-next-80b-a3b-instruct:free'",
+            )
 
         st.divider()
 
@@ -126,9 +178,27 @@ def render_sidebar() -> None:
 
         # ── Start / pause / stop controls ────────────────────────────────────
         if not st.session_state.running:
-            if st.button("▶ Start conversation", use_container_width=True, disabled=not models):
-                sel_m1 = model_names[idx1]
-                sel_m2 = model_names[idx2]
+            if provider == "Ollama":
+                start_disabled = not models
+            else:
+                start_disabled = not (
+                    or_api_key.strip() and or_model1.strip() and or_model2.strip()
+                )
+
+            if st.button(
+                "▶ Start conversation",
+                use_container_width=True,
+                disabled=start_disabled,
+            ):
+                if provider == "Ollama":
+                    sel_m1 = model_names[idx1]
+                    sel_m2 = model_names[idx2]
+                    api_key = ""
+                else:
+                    sel_m1 = or_model1.strip()
+                    sel_m2 = or_model2.strip()
+                    api_key = or_api_key.strip()
+
                 opener = init_message.strip() or "Hello! Let's start a conversation."
 
                 m1: list[dict] = []
@@ -153,6 +223,8 @@ def render_sidebar() -> None:
                     "intro_enabled": intro_enabled,
                     "init_message": opener,
                     "conversation_ended": False,
+                    "provider": provider,
+                    "openrouter_api_key": api_key,
                 })
                 st.rerun()
 

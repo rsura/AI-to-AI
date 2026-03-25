@@ -32,7 +32,8 @@ def _pdf_model_display(raw: str) -> tuple[str, str]:
       "gemma3:1b"    → ("Gemma 3",    "1 billion parameters")
       "mistral:7b"   → ("Mistral",    "7 billion parameters")
       "phi3:mini"    → ("Phi 3",      "mini")
-      "qwen2.5:14b"  → ("Qwen 2.5",  "14 billion parameters")
+      "qwen2.5:14b"  → ("Qwen 2.5",   "14 billion parameters")
+      "gemma3:270m"  → ("Gemma 3",    "270 million parameters")
     """
     base, _, tag = raw.partition(":")
     spaced = re.sub(r"([a-zA-Z])(\d)", r"\1 \2", base)
@@ -43,7 +44,7 @@ def _pdf_model_display(raw: str) -> tuple[str, str]:
     if tag:
         m = re.match(r"^(\d+(?:\.\d+)?)b$", tag.lower())
         if m:
-            param_desc = f"{m.group(1)} billion parameters"
+            param_desc = f"{m.group(1)} {"latest" if raw.endswith("latest") else ("million parameters" if raw.endswith("m") and raw[-2].isdigit() else "billion parameters")}"
         else:
             param_desc = tag
 

@@ -63,6 +63,7 @@ def build_system_prompt(own_name: str, other_name: str) -> str:
         f"with another AI named {other_name}. You are fully aware that you are speaking "
         f"to a fellow AI — not a human. Be genuine, curious, and intellectually engaged. "
         f"Keep your responses concise (2–4 sentences) so the conversation flows naturally."
+        f"Additionally, if you believe the conversation is over, you should simply say 'Goodbye' and end the conversation."
     )
 
 
