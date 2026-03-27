@@ -2,10 +2,39 @@
 sidebar.py — Sidebar UI for the 2-AIs-Talking app.
 """
 
+import json
+import pathlib
 import streamlit as st
 
 from constants import DEFAULTS
 from ollama_utils import build_system_prompt, get_models, get_system_ram
+
+_EXAMPLES_PATH = pathlib.Path(__file__).with_name("opening_msg_examples.json")
+
+
+def _load_examples() -> list[dict]:
+    try:
+        return json.loads(_EXAMPLES_PATH.read_text())["opening_msg_examples"]
+    except Exception:
+        return []
+
+
+@st.dialog("💡 Example prompts")
+def _show_examples_dialog() -> None:
+    examples = _load_examples()
+    if not examples:
+        st.caption("No examples found.")
+        return
+    locked = st.session_state.get("running", False)
+    with st.container(height=260, width="content"):
+        for ex in examples:
+            intro = ex["AI Introduction Mode"]
+            msg = ex["Opening Message"]
+            label = f"{'🤖 ' if intro else ''}{msg[:50]}{'…' if len(msg) > 50 else ''}"
+            if st.button(label, use_container_width=True, disabled=locked):
+                st.session_state["_pending_msg"] = msg
+                st.session_state["_pending_intro"] = intro
+                st.rerun()
 
 
 def render_sidebar() -> None:
@@ -16,6 +45,12 @@ def render_sidebar() -> None:
     Mutates st.session_state directly and calls st.rerun() where needed,
     matching the original inline behaviour.
     """
+    # Apply a pending example selection before any widget is instantiated,
+    # so that setting cb_intro / ta_init doesn't conflict with widget keys.
+    if "_pending_msg" in st.session_state:
+        st.session_state["ta_init"] = st.session_state.pop("_pending_msg")
+        st.session_state["cb_intro"] = st.session_state.pop("_pending_intro")
+
     with st.sidebar:
         st.header("Configuration")
         st.divider()
@@ -166,12 +201,20 @@ def render_sidebar() -> None:
             key="cb_intro",
         )
 
+        col_lbl, col_pop = st.columns([3, 1])
+        with col_lbl:
+            st.caption("Opening message (leave blank for a default starter)")
+        with col_pop:
+            if st.button("💡 Examples", use_container_width=True, disabled=locked):
+                _show_examples_dialog()
+
         init_message = st.text_area(
-            "Opening message (leave blank for a default starter)",
+            "Opening message",
             value="",
             disabled=locked,
             placeholder="e.g. Let's discuss the nature of consciousness…",
             key="ta_init",
+            label_visibility="collapsed",
         )
 
         st.divider()

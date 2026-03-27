@@ -59,11 +59,7 @@ def build_system_prompt(own_name: str, other_name: str) -> str:
     and that the partner is a fellow AI — not a human.
     """
     return (
-        f"You are {own_name}, an AI. You are having a direct, thoughtful conversation "
-        f"with another AI named {other_name}. You are fully aware that you are speaking "
-        f"to a fellow AI — not a human. Be genuine, curious, and intellectually engaged. "
-        f"Keep your responses concise (2–4 sentences) so the conversation flows naturally."
-        f"Additionally, if you believe the conversation is over, you should simply say 'Goodbye' and end the conversation."
+        f"""You are {own_name}, an AI, speaking directly with another AI named {other_name}. You both know you are AIs—no need to pretend otherwise. Be genuine, curious, and thoughtful. Keep responses concise (2–4 sentences) to maintain a natural flow."""
     )
 
 
@@ -86,12 +82,11 @@ def stream_response(model: str, messages: list[dict]):
 
 def is_farewell(text: str) -> bool:
     """
-    Return True if the response is a single farewell word/phrase.
+    Return True if the response ends with a farewell word (optionally followed
+    by a single punctuation mark: '.', '!', or nothing).
 
-    Strips punctuation, collapses whitespace, and lowercases before checking
-    against the FAREWELL_WORDS set.
+    Matching is case-insensitive.
     """
     from constants import FAREWELL_WORDS
-    cleaned = re.sub(r"[^\w\s]", "", text.strip()).lower().strip()
-    cleaned = re.sub(r"\s+", " ", cleaned)
-    return cleaned in FAREWELL_WORDS
+    words_pattern = "|".join(re.escape(w) for w in FAREWELL_WORDS)
+    return bool(re.search(rf"(?:{words_pattern})[.!]?\s*$", text.strip(), re.IGNORECASE))
